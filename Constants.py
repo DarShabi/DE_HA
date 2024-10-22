@@ -8,3 +8,8 @@ OUTLIER_THRESHOLD_MULTIPLIER = 3.0
 # Quantiles used for calculating the Interquartile Range (IQR)
 LOWER_QUANTILE = 0.25
 UPPER_QUANTILE = 0.75
+
+# Modeling
+TEST_SIZE_SPLIT = 0.2
+RANDOM_STATE_SEED = 23
+N_ESTIMATORS = 100

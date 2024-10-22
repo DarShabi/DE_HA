@@ -1,8 +1,13 @@
+import sys
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from EDA import load_data, dataset_size
 import Constants as c
+import logging
+from logging_config import setup_logging
+
+setup_logging()
 
 
 def remove_duplicates(data: pd.DataFrame) -> pd.DataFrame:
@@ -81,6 +86,7 @@ def handle_outliers(data: pd.DataFrame, threshold_multiplier: float = c.OUTLIER_
     return data
 
 
+# Output debug information
 def print_categorical_values(data: pd.DataFrame):
     """
     Print the names of categorical columns and their unique values.
@@ -94,49 +100,76 @@ def print_categorical_values(data: pd.DataFrame):
         print(f"Unique Values [{len(data[column].unique())}]: {data[column].unique()}")
 
 
-def pre_correct_date(date_str):
-    """Pre-correct known problematic date formats."""
-    if date_str in ['19/02/2917', '03/02/2916']:  # Add more cases as identified
+def pre_correct_date(date_str: str) -> str:
+    """
+    Pre-correct known problematic date formats by replacing incorrect century values.
+
+    Args:
+    date_str (str): The date string to be checked and corrected.
+
+    Returns:
+    str: The corrected date string.
+    """
+    if date_str in ['19/02/2917', '03/02/2916']:
         return date_str.replace('291', '201')
     return date_str
 
 
-def convert_dates(data):
-    """Convert date columns and correct years that seem to be off by a century due to typos."""
-    date_columns = ['a_enddate', 'moj_courtcaseopendate', 'moj_eventdate']
-    current_year = pd.Timestamp.now().year
+def convert_dates(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert date columns and correct years that seem to be off by a century due to typos.
 
-    for col in date_columns:
-        # Pre-correct known problematic dates
-        data[col] = data[col].apply(pre_correct_date)
+    Args:
+    data (pd.DataFrame): The input dataframe.
 
-        data[col] = pd.to_datetime(data[col], errors='coerce', dayfirst=True)
-        data[col + '_year'] = data[col].dt.year
-        data[col + '_month'] = data[col].dt.month
-        data[col + '_day'] = data[col].dt.day
+    Returns:
+    pd.DataFrame: The dataframe with corrected and converted date columns.
+    """
+    try:
+        date_columns = ['a_enddate', 'moj_courtcaseopendate', 'moj_eventdate']
 
-        # Output debug information
-        # print(f"After extraction, {col + '_year'} contains NaN: {data[col + '_year'].isnull().any()}")
+        for col in date_columns:
+            # Pre-correct known problematic dates
+            data[col] = data[col].apply(pre_correct_date)
 
-        # Reassemble the date
-        data[col] = pd.to_datetime({
-            'year': data[col + '_year'],
-            'month': data[col + '_month'].fillna(1),
-            'day': data[col + '_day'].fillna(1)
-        }, errors='coerce')
+            data[col] = pd.to_datetime(data[col], errors='coerce', dayfirst=True)
+            data[col + '_year'] = data[col].dt.year
+            data[col + '_month'] = data[col].dt.month
+            data[col + '_day'] = data[col].dt.day
 
-        if data[col].isnull().any():
-            print(f"Conversion issues still found in column {col}.")
-            failed_conversions = data[data[col].isnull()][col]
-            if not failed_conversions.empty:
-                print(f"Failed to convert the following entries in column {col}:")
-                print(failed_conversions)
+            # Output debug information
+            # print(f"After extraction, {col + '_year'} contains NaN: {data[col + '_year'].isnull().any()}")
 
-    return data
+            # Reassemble the date
+            data[col] = pd.to_datetime({
+                'year': data[col + '_year'],
+                'month': data[col + '_month'].fillna(1),
+                'day': data[col + '_day'].fillna(1)
+            }, errors='coerce')
+
+            if data[col].isnull().any():
+                print(f"Conversion issues still found in column {col}.")
+                failed_conversions = data[data[col].isnull()][col]
+                if not failed_conversions.empty:
+                    print(f"Failed to convert the following entries in column {col}:")
+                    print(failed_conversions)
+
+        return data
+    except Exception as e:
+        logging.error("Error converting dates", exc_info=True)
+        raise
 
 
-def apply_label_encoding(data):
-    """Apply label encoding to nominal categorical features."""
+def apply_label_encoding(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Apply label encoding to specified nominal categorical features.
+
+    Args:
+    data (pd.DataFrame): The input dataframe.
+
+    Returns:
+    pd.DataFrame: The dataframe with label-encoded categorical columns.
+    """
     categorical_columns = ['tnufa_businessunitidName', 'moj_courtidName', 'tnufa_bamacasetypeidName',
                            'tnufa_essencegroupidName', 'tnufa_claimessenceidName']
     label_encoder = LabelEncoder()
@@ -185,38 +218,67 @@ def test_no_duplicates(data: pd.DataFrame):
     assert data.duplicated().sum() == 0, "There are still duplicates in the dataframe."
 
 
+def preprocess(filepath: str) -> pd.DataFrame:
+    """
+    Load and preprocess the data, performing steps such as removing columns with missing values, imputing missing data,
+    handling outliers, encoding categorical variables, and correcting date formats.
+
+    Args:
+    filepath (str): The path to the dataset file.
+
+    Returns:
+    pd.DataFrame: The fully preprocessed dataframe.
+    """
+    try:
+        mapping_filepath = c.MAPPING_PATH
+
+        # Load main data and mapping data
+        processed_data = load_data(filepath)
+        mapping_data = load_data(mapping_filepath)
+
+        # Complete initial preprocessing
+        processed_data = remove_columns_with_missing_values(processed_data, threshold=c.MISSING_VALUES_THRESHOLD)
+        processed_data = impute_missing_values(processed_data)
+        processed_data = handle_outliers(processed_data, threshold_multiplier=c.OUTLIER_THRESHOLD_MULTIPLIER)
+        processed_data = remove_duplicates(processed_data)
+
+        # Proceed with data conversion
+        processed_data = convert_dates(processed_data)
+        date_columns = ['a_enddate', 'moj_courtcaseopendate', 'moj_eventdate']
+        processed_data.drop(columns=date_columns, inplace=True)
+
+        processed_data = apply_label_encoding(processed_data)
+        processed_data = map_and_encode_target(processed_data, mapping_data)
+        logging.info(processed_data['tnufa_endreasonName_mapped'].value_counts())
+
+        processed_data.drop(columns=['tnufa_endreasonName'], inplace=True)
+
+        # Run tests and output results
+        test_no_missing_values(processed_data)
+        test_no_duplicates(processed_data)
+        logging.info("All tests passed.")
+        logging.info("Preprocessing complete.")
+        print(processed_data.head())
+        logging.info("Dataset Size after preprocessing: {}".format(len(processed_data)))
+
+        return processed_data
+
+    except Exception as e:
+        logging.error("Error during preprocessing", exc_info=True)
+        raise
+
+
 def main():
-    filepath = c.DATA_PATH
-    mapping_filepath = c.MAPPING_PATH
-
-    # Load main data and mapping data
-    processed_data = load_data(filepath)
-    mapping_data = load_data(mapping_filepath)
-
-    # Complete initial preprocessing
-    processed_data = remove_columns_with_missing_values(processed_data, threshold=c.MISSING_VALUES_THRESHOLD)
-    processed_data = impute_missing_values(processed_data)
-    processed_data = handle_outliers(processed_data, threshold_multiplier=c.OUTLIER_THRESHOLD_MULTIPLIER)
-    processed_data = remove_duplicates(processed_data)
-
-    # Proceed with data conversion
-    processed_data = convert_dates(processed_data)
-    processed_data = apply_label_encoding(processed_data)
-    processed_data = map_and_encode_target(processed_data, mapping_data)
-    print(processed_data['tnufa_endreasonName_mapped'].value_counts())
-
-    processed_data.drop(columns=['tnufa_endreasonName'], inplace=True)
-
-    # Run tests and output results
-    test_no_missing_values(processed_data)
-    test_no_duplicates(processed_data)
-    print("All tests passed.")
-    print("Preprocessing complete.")
-    print(processed_data.head())
-    print("Dataset Size after preprocessing:", dataset_size(processed_data))
-
-
+    try:
+        filepath = c.DATA_PATH
+        data = preprocess(filepath)
+        logging.info("Data preprocessed successfully.")
+    except Exception as e:
+        logging.error("Failed to preprocess data", exc_info=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
+
+
