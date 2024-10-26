@@ -1,4 +1,4 @@
-# Data Engineering and Analysis (DE_HA)
+# Data Engineering Home Assignment (DE_HA)
 
 This repository, **DE_HA**, is a structured data engineering and analysis project designed to process, analyze, and model structured data. The pipeline includes exploratory data analysis, data preprocessing, modeling, and deployment using Docker.
 
