@@ -2,7 +2,7 @@ import sys
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
-from EDA import load_data, dataset_size
+from EDA import load_data
 import Constants as c
 import logging
 from logging_config import setup_logging

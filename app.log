@@ -1,38 +1,10 @@
-[32m2024-10-22 17:03:42,847 - INFO - root - tnufa_endreasonName_mapped
+[32m2024-10-24 14:41:06,128 - INFO - root - tnufa_endreasonName_mapped
 1    533
 2    249
 0     82
 Name: count, dtype: int64[0m
-[32m2024-10-22 17:03:42,850 - INFO - root - All tests passed.[0m
-[32m2024-10-22 17:03:42,850 - INFO - root - Preprocessing complete.[0m
-[32m2024-10-22 17:03:42,862 - INFO - root - Dataset Size after preprocessing: 864[0m
-[32m2024-10-22 17:03:42,862 - INFO - root - Dataset size after preprocessing: 864[0m
-[32m2024-10-22 17:03:42,864 - INFO - root - Train set size: 552[0m
-[32m2024-10-22 17:03:42,865 - INFO - root - Validation set size: 139[0m
-[32m2024-10-22 17:03:42,865 - INFO - root - Test set size: 173[0m
-[32m2024-10-22 17:03:42,941 - INFO - root - ----------Validation Results----------[0m
-[32m2024-10-22 17:03:42,948 - INFO - root - Accuracy: 0.8273381294964028[0m
-[32m2024-10-22 17:03:42,948 - INFO - root - Classification Report:
-              precision    recall  f1-score   support
-
-           0       1.00      0.08      0.14        13
-           1       0.89      0.98      0.93        86
-           2       0.68      0.75      0.71        40
-
-    accuracy                           0.83       139
-   macro avg       0.86      0.60      0.60       139
-weighted avg       0.84      0.83      0.80       139
-[0m
-[32m2024-10-22 17:03:42,949 - INFO - root - ----------Test Results----------[0m
-[32m2024-10-22 17:03:42,955 - INFO - root - Accuracy: 0.791907514450867[0m
-[32m2024-10-22 17:03:42,955 - INFO - root - Classification Report:
-              precision    recall  f1-score   support
-
-           0       0.50      0.06      0.11        16
-           1       0.85      0.94      0.89       107
-           2       0.67      0.70      0.69        50
-
-    accuracy                           0.79       173
-   macro avg       0.67      0.57      0.56       173
-weighted avg       0.77      0.79      0.76       173
-[0m
+[32m2024-10-24 14:41:06,132 - INFO - root - All tests passed.[0m
+[32m2024-10-24 14:41:06,132 - INFO - root - Preprocessing complete.[0m
+[32m2024-10-24 14:41:06,163 - INFO - root - Dataset Size after preprocessing: 864[0m
+[32m2024-10-24 14:41:06,169 - INFO - root - Processed data saved to /Users/darshabi/Desktop/DE_HA/processed_data.json[0m
+[32m2024-10-24 14:41:06,170 - INFO - root - Data preprocessed successfully.[0m

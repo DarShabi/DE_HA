@@ -1,5 +1,6 @@
 DATA_PATH = '/Users/darshabi/Desktop/DE_HA/test_data_engineer.csv'
-MAPPING_PATH= '/Users/darshabi/Desktop/DE_HA/test_data_engineer_aggregated_case_result.csv'
+MAPPING_PATH =  '/Users/darshabi/Desktop/DE_HA/test_data_engineer_aggregated_case_result.csv'
+OUTPUT_PATH = '/Users/darshabi/Desktop/DE_HA/processed_data.json'
 MISSING_VALUES_THRESHOLD = 25.0
 
 # Multiplier used to determine the boundaries for outlier detection
